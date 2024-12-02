@@ -71,21 +71,16 @@ func isSafe(report *[]int) (safety, int) {
 
 // _REALLY_ naive implementation, but I can't think of a better one right now
 func isSafeish(report *[]int) safety {
-	r, idx := isSafe(report)
+	r, top := isSafe(report)
 	if r == SAFE {
 		return SAFE
 	}
 
-	if idx > 0 {
-		idx--
+	if top < len(*report)-1 {
+		top++
 	}
 
-	top := idx + 2
-	if top >= len(*report) {
-		top = len(*report) - 1
-	}
-
-	for ; idx <= top; idx++ {
+	for idx := 0; idx <= top; idx++ {
 		v := removeFromSlice(report, idx)
 		r, _ := isSafe(&v)
 		if r == SAFE {

@@ -42,8 +42,12 @@ func TestSafeish(t *testing.T) {
 		{[]int{8, 6, 4, 4, 1}, SAFE},
 		{[]int{1, 3, 6, 7, 9}, SAFE},
 		{[]int{5, 4, 3, 1, 2}, SAFE},
+		{[]int{3, 1, 2, 1, -2}, SAFE},
 		{[]int{7, 1, 2, 3, 4}, SAFE},
 		{[]int{7, 1, 2, 3, 3}, UNSAFE},
+		{[]int{7, 4, 5, 6, 7}, SAFE},
+		{[]int{7, 5, 6, 7, 8}, SAFE},
+		{[]int{5, 7, 6, 7, 8}, SAFE},
 		{[]int{1, 7, 3, 4, 5}, SAFE},
 		{[]int{1, 3, 4, 5, 9}, SAFE},
 	}
