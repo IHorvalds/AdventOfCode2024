@@ -54,7 +54,7 @@ func part2(v *[2]AVL) int {
 }
 
 func main() {
-	inputFlag := flag.String("input", "", "-input <inout file>")
+	inputFlag := flag.String("input", "", "-input <input file>")
 
 	flag.Parse()
 
