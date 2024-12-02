@@ -76,11 +76,15 @@ func isSafeish(report *[]int) safety {
 		return SAFE
 	}
 
+	idx := top - 2
 	if top < len(*report)-1 {
 		top++
 	}
+	if idx < 0 {
+		idx = 0
+	}
 
-	for idx := 0; idx <= top; idx++ {
+	for ; idx <= top; idx++ {
 		v := removeFromSlice(report, idx)
 		r, _ := isSafe(&v)
 		if r == SAFE {
