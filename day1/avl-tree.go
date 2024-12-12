@@ -94,7 +94,7 @@ func insert(t *AVL, n *node, val int) {
 		}
 		n.bal = n.bal + 1
 	}
-	setBalance(n)
+
 	assertBalance(n.bal)
 
 	// rebalance
@@ -114,8 +114,6 @@ func insert(t *AVL, n *node, val int) {
 		}
 	}
 	setBalance(n)
-
-	assertBalance(n.bal)
 }
 
 func createNode(v int) *node {
