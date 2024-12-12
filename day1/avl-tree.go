@@ -19,24 +19,46 @@ type AVL struct {
 	count int
 }
 
-func rotateLeft(n **node) {
-	newN := *(*n).right
-	(*n).right = newN.left
+func rotateLeft(n *node) node {
+	nCopy := *n
+	right := n.right
+	rleft := right.left
 
-	newN.left = *n
-	*n = &newN
-	setBalance(newN.left)
-	setBalance(*n)
+	right.left = &nCopy
+	nCopy.right = rleft
+
+	// newN := *(*n).right
+	// if newN.left != nil {
+	// 	*(nCopy.right) = *(newN.left)
+	// 	*(newN.left) = nCopy
+	// } else {
+	// 	newN.left = &nCopy
+	// }
+	setBalance(right.left)
+	setBalance(right.right)
+	setBalance(right)
+	return *right
 }
 
-func rotateRight(n **node) {
-	newN := *(*n).left
-	(*n).left = newN.right
+func rotateRight(n *node) node {
+	nCopy := *n
+	left := n.left
+	lright := left.right
 
-	newN.right = *n
-	*n = &newN
-	setBalance((*n).right)
-	setBalance(*n)
+	left.right = &nCopy
+	nCopy.left = lright
+
+	// if newN.right != nil {
+	// 	*(nCopy.left) = *(newN.right)
+	// 	*(newN.right) = nCopy
+	// } else {
+	// 	newN.right = &nCopy
+	// }
+
+	setBalance(left.left)
+	setBalance(left.right)
+	setBalance(left)
+	return *left
 }
 
 func (t *AVL) insert(val int) {
@@ -72,22 +94,23 @@ func insert(t *AVL, n *node, val int) {
 		}
 		n.bal = n.bal + 1
 	}
+	setBalance(n)
 	assertBalance(n.bal)
 
 	// rebalance
 	if n.bal >= 2 { // right heavy
 		if n.right.bal > 0 {
-			rotateLeft(&n)
+			*n = rotateLeft(n)
 		} else if n.right.bal < 0 {
-			rotateRight(&(n.right))
-			rotateLeft(&n)
+			*(n.right) = rotateRight(n.right)
+			*n = rotateLeft(n)
 		}
 	} else if n.bal <= -2 { // left heavy
 		if n.left.bal < 0 {
-			rotateRight(&n)
+			*n = rotateRight(n)
 		} else if n.left.bal > 0 {
-			rotateLeft(&(n.left))
-			rotateRight(&n)
+			*(n.left) = rotateLeft(n.left)
+			*n = rotateRight(n)
 		}
 	}
 	setBalance(n)
@@ -105,13 +128,23 @@ func createNode(v int) *node {
 	}
 }
 
+func abs(i int) int {
+	if i < 0 {
+		return -i
+	}
+	return i
+}
+
 func setBalance(n *node) {
+	if n == nil {
+		return
+	}
 	b := 0
 	if n.left != nil {
-		b = b - n.left.bal
+		b = b - 1 - abs(n.left.bal)
 	}
 	if n.right != nil {
-		b = b + n.right.bal
+		b = b + 1 + abs(n.right.bal)
 	}
 	n.bal = b
 }
