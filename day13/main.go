@@ -166,6 +166,7 @@ func parse(f string) ([]game, error) {
 
 func main() {
 	inputFlag := flag.String("input", "", "-input <input file>")
+	partFlag := flag.Int("part", 1, "-part [1 or 2]")
 
 	flag.Parse()
 
@@ -180,6 +181,10 @@ func main() {
 
 	total := 0
 	for _, g := range gms {
+		if *partFlag == 2 {
+			g.p.x += 10000000000000
+			g.p.y += 10000000000000
+		}
 		a, b := g.intersection()
 		if checkIntersection(&g, a, b) {
 			total += a*3 + b
