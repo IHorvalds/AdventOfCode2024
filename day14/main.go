@@ -4,11 +4,14 @@ import (
 	"bufio"
 	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"os"
+	"os/signal"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 type position struct {
@@ -21,6 +24,8 @@ type robot struct {
 	p position
 	v velocity
 }
+
+type robots []robot
 
 var (
 	width  = 101
@@ -70,6 +75,33 @@ func (r *robot) advance(seconds int) {
 	}
 }
 
+func (rbts robots) display(second int) {
+
+	m := map[position]int{}
+	for _, r := range rbts {
+		if _, ok := m[r.p]; !ok {
+			m[r.p] = 1
+		} else {
+			m[r.p]++
+		}
+	}
+	fmt.Print("\033[H\033[2J")
+	fmt.Printf("Second: %d\n\n", second)
+
+	for i := range height {
+		for j := range width {
+			p := position{j, i}
+			if c, ok := m[p]; ok {
+				fmt.Printf("%d", c)
+			} else {
+				fmt.Print(".")
+			}
+		}
+		fmt.Print("\n")
+	}
+	fmt.Scan("Next?")
+}
+
 func parseRobot(line string) (robot, error) {
 	reg := regexp.MustCompile(`p=(-?\d+),(-?\d+) v=(-?\d+),(-?\d+)`)
 	ms := reg.FindStringSubmatch(line)
@@ -103,14 +135,14 @@ func parseRobot(line string) (robot, error) {
 	}, nil
 }
 
-func parse(f string) ([]robot, error) {
+func parse(f string) (robots, error) {
 	fd, err := os.Open(f)
 	if err != nil {
-		return []robot{}, err
+		return robots{}, err
 	}
 	defer fd.Close()
 
-	rbts := []robot{}
+	rbts := robots{}
 	r := bufio.NewReader(fd)
 	for {
 		l, err := r.ReadString('\n')
@@ -118,11 +150,11 @@ func parse(f string) ([]robot, error) {
 			if errors.Is(err, io.EOF) {
 				break
 			}
-			return []robot{}, err
+			return robots{}, err
 		}
 		rbt, err := parseRobot(l)
 		if err != nil {
-			return []robot{}, err
+			return robots{}, err
 		}
 		rbts = append(rbts, rbt)
 	}
@@ -134,6 +166,8 @@ func main() {
 	inputFlag := flag.String("input", "", "-input <input file>")
 	widthFlag := flag.Int("width", 101, "-width <# blocks>")
 	heightFlag := flag.Int("height", 103, "-height <# blocks>")
+	watchOutput := flag.Bool("watch", false, "-watch")
+	secondFlag := flag.Int("second", -1, "-second # The second to display")
 
 	flag.Parse()
 
@@ -149,9 +183,45 @@ func main() {
 		log.Fatal(err)
 	}
 
-	for i := range rbts {
-		rbts[i].advance(100)
-	}
+	if !*watchOutput {
+		if *secondFlag != -1 {
+			for i := range rbts {
+				rbts[i].advance(100)
+			}
 
-	log.Printf("Safety factor: %d", countRobots(rbts))
+			log.Printf("Safety factor: %d", countRobots(rbts))
+		} else {
+			for i := range rbts {
+				rbts[i].advance(*secondFlag)
+			}
+
+			rbts.display(*secondFlag)
+		}
+	} else {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt)
+
+		running := true
+
+		c2 := make(chan struct{})
+		go func() {
+			s := 0
+			for running {
+				for i := range rbts {
+					rbts[i].advance(1)
+				}
+
+				rbts.display(s)
+				s++
+				time.Sleep(time.Millisecond * 165)
+			}
+
+			c2 <- struct{}{}
+		}()
+
+		<-c
+		running = false
+
+		<-c2
+	}
 }
